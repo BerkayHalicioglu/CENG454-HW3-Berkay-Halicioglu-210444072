@@ -3,13 +3,13 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    private void OnEnable()
+    private void Start()
     {
         GameEvents.Instance.OnGameOver += HandleGameOver;
         GameEvents.Instance.OnCoreDied += HandleCoreDied;
     }
 
-    private void OnDisable()
+    private void OnDestroy()
     {
         if (GameEvents.Instance == null) return;
         GameEvents.Instance.OnGameOver -= HandleGameOver;
