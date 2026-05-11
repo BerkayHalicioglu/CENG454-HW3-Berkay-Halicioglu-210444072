@@ -15,6 +15,7 @@ public class EnemySpawner : MonoBehaviour
 
     private int currentWave = 0;
     private int aliveEnemies = 0;
+    private bool waitingForWaveClear = false;
 
     private void Start()
     {
@@ -36,14 +37,28 @@ public class EnemySpawner : MonoBehaviour
         {
             currentWave++;
             aliveEnemies = enemiesPerWave;
+            waitingForWaveClear = true;
+
             SpawnWave();
 
-            yield return new WaitUntil(() => aliveEnemies <= 0);
+            // Her saniye kontrol et, hem sayaç hem sahnedeki düşman sayısı
+            while (waitingForWaveClear)
+            {
+                int actualEnemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None).Length;
+                if (actualEnemies <= 0 && aliveEnemies <= 0)
+                    waitingForWaveClear = false;
+
+                yield return new WaitForSeconds(0.5f);
+            }
 
             GameEvents.Instance.WaveCompleted(currentWave);
+            Debug.Log("Dalga " + currentWave + " tamamlandı!");
 
             if (currentWave < totalWaves)
+            {
+                Debug.Log(timeBetweenWaves + " saniye sonra yeni dalga...");
                 yield return new WaitForSeconds(timeBetweenWaves);
+            }
         }
 
         GameEvents.Instance.GameOver(true);
