@@ -5,16 +5,19 @@ public class PlayerController : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 5f;
 
-    [Header("Shooting")]
-    [SerializeField] private GameObject projectilePrefab;
-    [SerializeField] private float fireRate = 0.3f;
-
-    private float nextFireTime = 0f;
     private Rigidbody2D rb;
+    private IWeapon weapon;
+    private float nextFireTime = 0f;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+    }
+
+    private void Start()
+    {
+        BaseWeapon base_weapon = GetComponent<BaseWeapon>();
+        weapon = base_weapon;
     }
 
     private void Update()
@@ -37,27 +40,32 @@ public class PlayerController : MonoBehaviour
 
     private void HandleShooting()
     {
+        if (weapon == null) return;
+
         if (Input.GetMouseButton(0) && Time.time >= nextFireTime)
         {
-            nextFireTime = Time.time + fireRate;
-            Shoot();
+            nextFireTime = Time.time + weapon.FireRate;
+
+            Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            mouseWorld.z = 0f;
+            Vector2 direction = (mouseWorld - transform.position).normalized;
+
+            weapon.Fire(direction, transform.position);
         }
     }
 
-    private void Shoot()
+    public void ApplyUpgrade(WeaponPickup.UpgradeType upgradeType)
     {
-    Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-    mouseWorld.z = 0f;
-
-    Vector2 direction = (mouseWorld - transform.position).normalized;
-    float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-
-    GameObject bullet = ProjectilePool.Instance.Get(
-        transform.position,
-        Quaternion.Euler(0f, 0f, angle)
-    );
-
-    Projectile p = bullet.GetComponent<Projectile>();
-    if (p != null) p.Init(direction);
+        switch (upgradeType)
+        {
+            case WeaponPickup.UpgradeType.RapidFire:
+                weapon = new RapidFireDecorator(weapon);
+                Debug.Log("Hızlı atış aktif!");
+                break;
+            case WeaponPickup.UpgradeType.DoubleShoot:
+                weapon = new DoubleShootDecorator(weapon);
+                Debug.Log("Çift mermi aktif!");
+                break;
+        }
     }
 }
