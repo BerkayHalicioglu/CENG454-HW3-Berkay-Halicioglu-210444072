@@ -46,21 +46,18 @@ public class PlayerController : MonoBehaviour
 
     private void Shoot()
     {
-        if (projectilePrefab == null) return;
+    Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+    mouseWorld.z = 0f;
 
-        Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mouseWorld.z = 0f;
+    Vector2 direction = (mouseWorld - transform.position).normalized;
+    float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
-        Vector2 direction = (mouseWorld - transform.position).normalized;
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+    GameObject bullet = ProjectilePool.Instance.Get(
+        transform.position,
+        Quaternion.Euler(0f, 0f, angle)
+    );
 
-        GameObject bullet = Instantiate(
-            projectilePrefab,
-            transform.position,
-            Quaternion.Euler(0f, 0f, angle)
-        );
-
-        Projectile p = bullet.GetComponent<Projectile>();
-        if (p != null) p.Init(direction);
+    Projectile p = bullet.GetComponent<Projectile>();
+    if (p != null) p.Init(direction);
     }
 }
