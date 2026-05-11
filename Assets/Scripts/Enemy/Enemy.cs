@@ -13,6 +13,7 @@ public class Enemy : MonoBehaviour, IDamageable
     private float currentHealth;
     private IMovementStrategy movementStrategy;
     private Transform coreTransform;
+    private bool isDead = false;
 
     public float CurrentHealth => currentHealth;
     public bool IsAlive => currentHealth > 0f;
@@ -40,24 +41,33 @@ public class Enemy : MonoBehaviour, IDamageable
 
     public void TakeDamage(float amount)
     {
-        if (!IsAlive) return;
+        if (isDead) return;
 
         currentHealth -= amount;
 
-        if (!IsAlive)
+        if (currentHealth <= 0f)
         {
-            GameEvents.Instance.EnemyDied();
-            Destroy(gameObject);
+            Die();
         }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (isDead) return;
+
         EnergyCore core = other.GetComponent<EnergyCore>();
         if (core != null)
         {
             core.TakeDamage(damageToCore);
-            Destroy(gameObject);
+            Die();
         }
+    }
+
+    private void Die()
+    {
+        if (isDead) return;
+        isDead = true;
+        GameEvents.Instance.EnemyDied();
+        Destroy(gameObject);
     }
 }
